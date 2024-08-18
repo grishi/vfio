@@ -1,5 +1,5 @@
 # vfio
-My vfio setup scripts for Arch Linux.<br />
+My vfio setup scripts for Arch Linux (wayland).<br />
 
 System: <br />
 CPU: Amd 7950x3d <br />
