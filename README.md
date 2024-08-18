@@ -1,10 +1,12 @@
 # vfio
-My vfio setup scripts for Arch Linux.
+My vfio setup scripts for Arch Linux.<br />
 
-System:
-CPU: Amd 7950x3d
-GPU: iGPU (host) + RTX 4090
-RAM: 64GB DDR5 6000 CL32
-MOBO: Asus ProArt x670E
+System: <br />
+CPU: Amd 7950x3d <br />
+GPU: iGPU (host) + RTX 4090 <br />
+RAM: 64GB DDR5 6000 CL32 <br />
+MOBO: Asus ProArt x670E <br />
+
+
 
 
