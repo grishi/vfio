@@ -11,11 +11,9 @@ sudo pacman -S qemu libvirt edk2-ovmf virt-manager dnsmasq ebtables swtpm dmidec
 yay -S looking-glass-rc
 sudo systemctl enable --now libvirtd
 
-
 #Disabled next two steps to use bridge network br0.
 #sudo virsh net-start default
 #sudo virsh net-autostart default
-
 
 #Permissiona and hooks
 sudo usermod -aG kvm,input,libvirt,qemu,uucp $(whoami)
