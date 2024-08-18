@@ -1,0 +1,23 @@
+Amd igpu fix (some kernels had random crashing on igpu. For newer kernels check here: https://bbs.archlinux.org/viewtopic.php?id=298360 ):
+amdgpu.ppfeaturemask=0xfff7ffff amd_pstate=active gpu_sched.sched_policy=0
+
+<input type="evdev">
+<source dev="/dev/input/by-id/usb-PloopyCo_Mouse-if02-event-mouse"/>
+</input>
+<input type="evdev">
+<source dev="/dev/input/by-id/usb-Ploopy_Corporation_PloopyCo_Thumb_Trackball-if02-event-mouse"/>
+</input>
+<input type="evdev">
+<source dev="/dev/input/by-id/usb-Keychron_Keychron_Q3-event-kbd" grab="all" grabToggle="ctrl-ctrl" repeat="on"/>
+</input>
+
+
+Fedora:
+sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
+sudo dnf groupinstall --withoptional virtualization
+sudo micro /etc/sysconfig/grub
+amd_iommu=on iommu=pt
+sudo grub2-mkconfig -o /etc/grub2.cfg
+sudo micro /etc/dracut.conf.d/local.conf
+add_driver+=" vfio vfio_iommu_type1 vfio_pci vfio_virqfd "
+sudo dracut -f --kver `uname -r`
