@@ -1,0 +1,61 @@
+Amd igpu fix:
+amdgpu.ppfeaturemask=0xfff7ffff amd_pstate=active gpu_sched.sched_policy=0
+
+<input type="evdev">
+<source dev="/dev/input/by-id/usb-PloopyCo_Mouse-if02-event-mouse"/>
+</input>
+<input type="evdev">
+<source dev="/dev/input/by-id/usb-Ploopy_Corporation_PloopyCo_Thumb_Trackball-if02-event-mouse"/>
+</input>
+<input type="evdev">
+<source dev="/dev/input/by-id/usb-Keychron_Keychron_Q3-event-kbd" grab="all" grabToggle="ctrl-ctrl" repeat="on"/>
+</input>
+
+
+Fedora:
+sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda
+sudo dnf groupinstall --withoptional virtualization
+sudo micro /etc/sysconfig/grub
+amd_iommu=on iommu=pt
+sudo grub2-mkconfig -o /etc/grub2.cfg
+sudo micro /etc/dracut.conf.d/local.conf
+add_driver+=" vfio vfio_iommu_type1 vfio_pci vfio_virqfd "
+sudo dracut -f --kver `uname -r`
+
+Arch:
+sudo micro /etc/default/grub
+amd_iommu=on iommu=pt video=efifb:off
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+#sudo pacman -S qemu libvirt edk2-ovmf virt-manager dnsmasq ebtables swtpm dmidecode
+sudo pacman -S qemu libvirt edk2-ovmf virt-manager
+sudo systemctl enable --now libvirtd
+#sudo virsh net-start default
+#sudo virsh net-autostart default
+
+
+All:
+
+sudo usermod -aG kvm,input,libvirt,qemu,uucp $(whoami)
+
+sudo mkdir -p /etc/libvirt/hooks
+
+sudo wget 'https://raw.githubusercontent.com/PassthroughPOST/VFIO-Tools/master/libvirt_hooks/qemu' -O /etc/libvirt/hooks/qemu
+	 
+sudo chmod +x /etc/libvirt/hooks/qemu
+
+sudo mkdir -p /etc/libvirt/hooks/qemu.d/win11/prepare/begin && sudo mkdir -p /etc/libvirt/hooks/qemu.d/win11/release/end && sudo touch +x /etc/libvirt/hooks/qemu.d/win11/prepare/begin/start.sh && sudo touch +x /etc/libvirt/hooks/qemu.d/win11/release/end/revert.sh
+
+sudo micro /etc/libvirt/hooks/qemu.d/win11/prepare/begin/start.sh
+sudo micro /etc/libvirt/hooks/qemu.d/win11/release/end/revert.sh
+
+backup  kvm: virsh dumpxml win11 > /home/$(whoami)/Desktop/win11.xml
+restore kvm: virsh define --file /home/$(whoami)/Desktop/win11.xml
+
+After creating VM, add the following for BAR support
+sudo virt-xml win11 --edit --confirm --qemu-commandline="-fw_cfg opt/ovmf/X-PciMmio64Mb,string=65536"
+
+Looking-glass
+sudo micro /etc/tmpfiles.d/10-looking-glass.conf
+add: f    /dev/shm/looking-glass 0660 $(whoami)    kvm     -
+
+sudo systemd-tmpfiles --create /etc/tmpfiles.d/10-looking-glass.conf
