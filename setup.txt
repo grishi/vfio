@@ -1,21 +1,28 @@
 
-#Arch prep:
+# Install and run aur/gpu-passthrough-manager gui to install initial vfio configuration. 
+# It will need to be ran twice to install the initial vfio settings and then select graphics card you plan to pass through to VM.
+yay -S gpu-passthrough-manager
 
+#Arch Grub prep:
 sudo micro /etc/default/grub
 amd_iommu=on iommu=pt video=efifb:off
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 
-#Use the next line for normal KVM/QEMU networking 
-sudo pacman -S qemu libvirt edk2-ovmf virt-manager dnsmasq ebtables swtpm dmidecode
+#Arch Packages
+sudo pacman -S qemu libvirt edk2-ovmf virt-manager dnsmasq dmidecode
+#sudo pacman -S qemu libvirt edk2-ovmf virt-manager dnsmasq ebtables swtpm dmidecode
 #sudo pacman -S qemu libvirt edk2-ovmf virt-manager
+
 yay -S looking-glass-rc
+
+#Setup KVM/QEMU
 sudo systemctl enable --now libvirtd
+sudo virsh net-start default
+sudo virsh net-autostart default
 
-#Disabled next two steps to use bridge network br0.
-#sudo virsh net-start default
-#sudo virsh net-autostart default
+#reboot
 
-#Permissiona and hooks
+#Permission and hooks
 sudo usermod -aG kvm,input,libvirt,qemu,uucp $(whoami)
 
 sudo mkdir -p /etc/libvirt/hooks
@@ -26,17 +33,17 @@ sudo chmod +x /etc/libvirt/hooks/qemu
 
 sudo mkdir -p /etc/libvirt/hooks/qemu.d/win11/prepare/begin && sudo mkdir -p /etc/libvirt/hooks/qemu.d/win11/release/end && sudo touch +x /etc/libvirt/hooks/qemu.d/win11/prepare/begin/start.sh && sudo touch +x /etc/libvirt/hooks/qemu.d/win11/release/end/revert.sh
 
-sudo micro /etc/libvirt/hooks/qemu.d/win11/prepare/begin/start.sh
-sudo micro /etc/libvirt/hooks/qemu.d/win11/release/end/revert.sh
+sudo micro /etc/libvirt/hooks/qemu.d/win11/prepare/begin/start.sh # Copy and configure contents from https://raw.githubusercontent.com/grishi/vfio/main/start.sh
+sudo micro /etc/libvirt/hooks/qemu.d/win11/release/end/revert.sh  # Copy and configure contents from https://raw.githubusercontent.com/grishi/vfio/main/revert.sh
 
-#Restore existing VM or create a new one.
-#backup  kvm: virsh dumpxml win11 > /home/$(whoami)/Desktop/win11.xml
-restore kvm: virsh define --file /home/$(whoami)/Desktop/win11.xml
-
-#After creating VM, add the following for BAR support
+#For new VM's, add the following for BAR support
 sudo virt-xml win11 --edit --confirm --qemu-commandline="-fw_cfg opt/ovmf/X-PciMmio64Mb,string=65536"
 
-#Looking-glass setup
+#Restore or backup existing VM or create a new one.
+restore kvm: virsh define --file /home/$(whoami)/Desktop/win11.xml
+#backup  kvm: virsh dumpxml win11 > /home/$(whoami)/Desktop/win11.xml
+
+#Looking-glass setup - Note for $(whoami) below use your username
 sudo micro /etc/tmpfiles.d/10-looking-glass.conf
 add: f    /dev/shm/looking-glass 0660 $(whoami)    kvm     -
 sudo systemd-tmpfiles --create /etc/tmpfiles.d/10-looking-glass.conf
